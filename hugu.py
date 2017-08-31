@@ -19,16 +19,16 @@ alertfile = './alerm/alerm.wav'
 fps = 0
 
 # fourcc = cv2.VideoWriter_fourcc(*'XVID')
-fourcc = cv2.VideoWriter_fourcc('D', 'I', 'V', 'X')
+fourcc = cv2.VideoWriter_fourcc('D', 'I','V','X')
 
 while fps == 0:
     print('starting video capture')
     video_capture = cv2.VideoCapture(url)
     fps = video_capture.get(cv2.CAP_PROP_FPS)
     # fourcc = video_capture.get(cv2.CAP_PROP_FOURCC)
-    size = (int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+    size = (int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)/2), int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)/2))
 
-output_movie = cv2.VideoWriter('./output/output.avi', fourcc, 29.97, size)
+output_movie = cv2.VideoWriter('./output/output.avi', -1, fps, size)
 
 # videoWriter = cv2.VideoWriter('./byb/bybout.mp4', 6, fps, size)
 # Load a sample picture and learn how to recognize it.
@@ -48,7 +48,7 @@ execcnt = 0
 ret, frame = video_capture.read()
 while ret:
     cnt += 1
-    if not cnt % 3 == 0:
+    if not cnt % 1 == 0:
         ret, frame = video_capture.read()
         continue
     execcnt += 1
@@ -86,6 +86,9 @@ while ret:
 
     process_this_frame = not process_this_frame
 
+    if execcnt % 4 == 0:
+        cv2.imwrite('./output/' + str(_datetime.datetime.now().strftime('%Y%m%d%H%M%S')) + "_Unknow"  + str(
+            execcnt) + '.jpg', small_frame)
 
     # Display the results
     for (top, right, bottom, left), name in zip(face_locations, face_names):
