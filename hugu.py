@@ -1,6 +1,7 @@
 import face_recognition
 import cv2
 import pygame
+import _datetime
 # This is a demo of running face recognition on live video from your webcam. It's a little more complicated than the
 # other example, but it includes some basic performance tweaks to make things run a lot faster:
 #   1. Process each video frame at 1/4 resolution (though still display it at full resolution)
@@ -11,15 +12,24 @@ import pygame
 # specific demo. If you have trouble installing it, try any of the other demos that don't require it instead.
 
 # Get a reference to webcam #0 (the default one)
-url = 'http://192.168.0.105:8080/video'
+# url = 'http://192.168.0.105:8080/video'
 # url = 'http://192.168.100.104:8080/video'
-# url = './byb/byb.mp4'
+url = './input/byb.mp4'
+alertfile = './alerm/alerm.wav'
 fps = 0
+
+# fourcc = cv2.VideoWriter_fourcc(*'XVID')
+fourcc = cv2.VideoWriter_fourcc('D', 'I', 'V', 'X')
+
 while fps == 0:
     print('starting video capture')
     video_capture = cv2.VideoCapture(url)
     fps = video_capture.get(cv2.CAP_PROP_FPS)
+    # fourcc = video_capture.get(cv2.CAP_PROP_FOURCC)
     size = (int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+
+output_movie = cv2.VideoWriter('./output/output.avi', fourcc, 29.97, size)
+
 # videoWriter = cv2.VideoWriter('./byb/bybout.mp4', 6, fps, size)
 # Load a sample picture and learn how to recognize it.
 obama_image = face_recognition.load_image_file("./input/byb.jpg")
@@ -63,10 +73,10 @@ while ret:
             if match[0]:
                 name = "WANTED"
                 print('found')
-                file = r'D:\CloudMusic\1.mp3'
+                # file = r'D:\CloudMusic\1.mp3'
                 pygame.mixer.init()
                 print("播放音乐1")
-                track = pygame.mixer.music.load(file)
+                track = pygame.mixer.music.load(alertfile)
 
                 pygame.mixer.music.play()
                 # time.sleep(10)
@@ -99,12 +109,13 @@ while ret:
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(small_frame, name, (left + 6, bottom - 6), font, 0.5, (255, 255, 255), 1)
 
-        cv2.imwrite('./output/' + str(name) + str(execcnt) + '.jpg', small_frame)
+        cv2.imwrite('./output/' + str(_datetime.datetime.now().strftime('%Y%m%d%H%M%S')) + "_" + str(name) + str(execcnt) + '.jpg', small_frame)
 
     # videoWriter.write(frame)  # 写视频帧
     # Display the resulting image
     try:
         cv2.imshow('Video', small_frame)
+        output_movie.write(small_frame)
     except :
         print('error')
 
