@@ -14,26 +14,37 @@ import _datetime
 # Get a reference to webcam #0 (the default one)
 # url = 'http://192.168.0.105:8080/video'
 # url = 'http://192.168.100.104:8080/video'
-url = './input/byb.mp4'
+# url = './input/byb.mp4'
+url = 0
 alertfile = './alerm/alerm.wav'
 fps = 0
+output_video = False
+output_img = False
+speed = 2
+v_size = 1
 
-# fourcc = cv2.VideoWriter_fourcc(*'XVID')
-fourcc = cv2.VideoWriter_fourcc('D', 'I','V','X')
-
-while fps == 0:
-    print('starting video capture')
+if url:
+    while fps == 0:
+        print('starting video capture')
+        video_capture = cv2.VideoCapture(url)
+        fps = video_capture.get(cv2.CAP_PROP_FPS)
+else :
     video_capture = cv2.VideoCapture(url)
-    fps = video_capture.get(cv2.CAP_PROP_FPS)
-    # fourcc = video_capture.get(cv2.CAP_PROP_FOURCC)
-    size = (int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)/2), int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)/2))
 
-output_movie = cv2.VideoWriter('./output/output.avi', -1, fps, size)
+fourcc = video_capture.get(cv2.CAP_PROP_FOURCC)
+exposure = video_capture.get(cv2.CAP_PROP_EXPOSURE)
+print(exposure)
+# video_capture.set(cv2.CAP_PROP_EXPOSURE, -0.5)
+
+size = (int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH) / v_size), int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT) / v_size))
+
+if output_video:
+    output_movie = cv2.VideoWriter('./output/output.avi', -1, fps, size)
 
 # videoWriter = cv2.VideoWriter('./byb/bybout.mp4', 6, fps, size)
 # Load a sample picture and learn how to recognize it.
-obama_image = face_recognition.load_image_file("./input/byb.jpg")
-obama_face_encoding = face_recognition.face_encodings(obama_image)[0]
+base_image = face_recognition.load_image_file("./input/byb.jpg")
+base_face_encoding = face_recognition.face_encodings(base_image)[0]
 
 # Initialize some variables
 face_locations = []
@@ -46,16 +57,18 @@ process_this_frame = True
 cnt = 0
 execcnt = 0
 ret, frame = video_capture.read()
+
+print(ret)
 while ret:
     cnt += 1
-    if not cnt % 1 == 0:
+    if not cnt % speed == 0:
         ret, frame = video_capture.read()
         continue
     execcnt += 1
     # Resize frame of video to 1/4 size for faster face recognition processing
     # if  frame is not None:
     try:
-        small_frame = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
+        small_frame = cv2.resize(frame, (0, 0), fx=1/v_size, fy=1/v_size)
     except :
         print('error')
 
@@ -68,14 +81,14 @@ while ret:
         face_names = []
         for face_encoding in face_encodings:
             # See if the face is a match for the known face(s)
-            match = face_recognition.compare_faces([obama_face_encoding], face_encoding,tolerance=0.5)
+            match = face_recognition.compare_faces([base_face_encoding], face_encoding,tolerance=0.5)
             name = "Unknown"
             if match[0]:
                 name = "WANTED"
                 print('found')
                 # file = r'D:\CloudMusic\1.mp3'
                 pygame.mixer.init()
-                print("播放音乐1")
+                print("Alert!!")
                 track = pygame.mixer.music.load(alertfile)
 
                 pygame.mixer.music.play()
@@ -87,8 +100,9 @@ while ret:
     process_this_frame = not process_this_frame
 
     if execcnt % 4 == 0:
-        cv2.imwrite('./output/' + str(_datetime.datetime.now().strftime('%Y%m%d%H%M%S')) + "_Unknow"  + str(
-            execcnt) + '.jpg', small_frame)
+        if output_img:
+            cv2.imwrite('./output/' + str(_datetime.datetime.now().strftime('%Y%m%d%H%M%S')) + "_Unknow"  + str(
+                execcnt) + '.jpg', small_frame)
 
     # Display the results
     for (top, right, bottom, left), name in zip(face_locations, face_names):
@@ -111,14 +125,15 @@ while ret:
         cv2.rectangle(small_frame, (left, bottom - 15), (right, bottom), color, cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(small_frame, name, (left + 6, bottom - 6), font, 0.5, (255, 255, 255), 1)
-
-        cv2.imwrite('./output/' + str(_datetime.datetime.now().strftime('%Y%m%d%H%M%S')) + "_" + str(name) + str(execcnt) + '.jpg', small_frame)
+        if output_img:
+            cv2.imwrite('./output/' + str(_datetime.datetime.now().strftime('%Y%m%d%H%M%S')) + "_" + str(name) + str(execcnt) + '.jpg', small_frame)
 
     # videoWriter.write(frame)  # 写视频帧
     # Display the resulting image
     try:
         cv2.imshow('Video', small_frame)
-        output_movie.write(small_frame)
+        if output_video:
+            output_movie.write(small_frame)
     except :
         print('error')
 
