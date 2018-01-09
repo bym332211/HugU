@@ -22,9 +22,12 @@ fps = 0
 output_video = False
 output_img = False
 speed = 4
-v_size = 2
+v_size = 2.5
+# v_size=1
 alermFlg = False
 
+huzi = cv2.imread("./input/huzi.jpg")
+img = cv2.imread("./input/timg.jpg")
 if url:
     while fps == 0:
         print('starting video capture')
@@ -45,8 +48,8 @@ if output_video:
 
 # videoWriter = cv2.VideoWriter('./byb/bybout.mp4', 6, fps, size)
 # Load a sample picture and learn how to recognize it.
-base_image = face_recognition.load_image_file("./input/h.jpg")
-base_face_encoding = face_recognition.face_encodings(base_image)[0]
+# base_image = face_recognition.load_image_file("./input/h.jpg")
+# base_face_encoding = face_recognition.face_encodings(base_image)[0]
 
 # Initialize some variables
 face_locations = []
@@ -83,22 +86,8 @@ while ret:
         face_names = []
         for face_encoding in face_encodings:
             # See if the face is a match for the known face(s)
-            match = face_recognition.compare_faces([base_face_encoding], face_encoding,tolerance=0.5)
+            # match = face_recognition.compare_faces([base_face_encoding], face_encoding,tolerance=0.5)
             name = "Unknown"
-            if match[0]:
-                name = "WANTED"
-                print('found')
-                # file = r'D:\CloudMusic\1.mp3'
-                if alermFlg:
-                    pygame.mixer.init()
-                    print("Alert!!")
-                    track = pygame.mixer.music.load(alertfile)
-                    pygame.mixer.music.play()
-                else :
-                    ishow.show_image()
-                # time.sleep(10)
-                # pygame.mixer.music.stop()
-
             face_names.append(name)
 
     process_this_frame = not process_this_frame
@@ -123,12 +112,14 @@ while ret:
             color = green
         else :
             color = red
-        cv2.rectangle(small_frame, (left, top), (right, bottom), color, 2)
+        # cv2.rectangle(small_frame, (left, top), (right, bottom), color, 2)
 
         # Draw a label with a name below the face
         cv2.rectangle(small_frame, (left, bottom - 15), (right, bottom), color, cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(small_frame, name, (left + 6, bottom - 6), font, 0.5, (255, 255, 255), 1)
+
+        cv2.addWeighted(img, 0.7, img, 0.3, 0)
         if output_img:
             cv2.imwrite('./output/' + str(_datetime.datetime.now().strftime('%Y%m%d%H%M%S')) + "_" + str(name) + str(execcnt) + '.jpg', small_frame)
 
