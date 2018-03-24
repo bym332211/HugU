@@ -1,8 +1,7 @@
 import face_recognition
 import cv2
-import pygame
+from PIL import Image, ImageDraw
 import _datetime
-import image_show as ishow
 # This is a demo of running face recognition on live video from your webcam. It's a little more complicated than the
 # other example, but it includes some basic performance tweaks to make things run a lot faster:
 #   1. Process each video frame at 1/4 resolution (though still display it at full resolution)
@@ -82,6 +81,8 @@ while ret:
         # Find all the faces and face encodings in the current frame of video
         face_locations = face_recognition.face_locations(small_frame)
         face_encodings = face_recognition.face_encodings(small_frame, face_locations)
+        face_landmarks_list = face_recognition.face_landmarks(small_frame)
+
 
         face_names = []
         for face_encoding in face_encodings:
@@ -112,7 +113,7 @@ while ret:
             color = green
         else :
             color = red
-        # cv2.rectangle(small_frame, (left, top), (right, bottom), color, 2)
+        cv2.rectangle(small_frame, (left, top), (right, bottom), color, 2)
 
         # Draw a label with a name below the face
         cv2.rectangle(small_frame, (left, bottom - 15), (right, bottom), color, cv2.FILLED)

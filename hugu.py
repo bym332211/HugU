@@ -2,7 +2,7 @@ import face_recognition
 import cv2
 import pygame
 import _datetime
-import image_show as ishow
+# import image_show as ishow
 # This is a demo of running face recognition on live video from your webcam. It's a little more complicated than the
 # other example, but it includes some basic performance tweaks to make things run a lot faster:
 #   1. Process each video frame at 1/4 resolution (though still display it at full resolution)
@@ -22,7 +22,7 @@ fps = 0
 output_video = False
 output_img = False
 speed = 4
-v_size = 2
+v_size = 1
 alermFlg = False
 
 if url:
@@ -45,7 +45,7 @@ if output_video:
 
 # videoWriter = cv2.VideoWriter('./byb/bybout.mp4', 6, fps, size)
 # Load a sample picture and learn how to recognize it.
-base_image = face_recognition.load_image_file("./input/h.jpg")
+base_image = face_recognition.load_image_file("./input/me.png")
 base_face_encoding = face_recognition.face_encodings(base_image)[0]
 
 # Initialize some variables
@@ -83,10 +83,11 @@ while ret:
         face_names = []
         for face_encoding in face_encodings:
             # See if the face is a match for the known face(s)
-            match = face_recognition.compare_faces([base_face_encoding], face_encoding,tolerance=0.5)
-            name = "Unknown"
+            match = face_recognition.compare_faces([base_face_encoding], face_encoding,tolerance=0.45)
+            distance = face_recognition.face_distance([base_face_encoding], face_encoding)
+            name = "Unknown:" + str(distance)
             if match[0]:
-                name = "WANTED"
+                name = "Bym:" + str(distance)
                 print('found')
                 # file = r'D:\CloudMusic\1.mp3'
                 if alermFlg:
@@ -95,9 +96,11 @@ while ret:
                     track = pygame.mixer.music.load(alertfile)
                     pygame.mixer.music.play()
                 else :
-                    ishow.show_image()
+                    pass
+                    # ishow.show_image()
                 # time.sleep(10)
                 # pygame.mixer.music.stop()
+
 
             face_names.append(name)
 
