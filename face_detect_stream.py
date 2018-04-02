@@ -5,7 +5,10 @@ import face_recognition
 import cv2
 import os
 import re
-import datetime
+import tornado.httpserver
+import tornado.ioloop
+import tornado.options
+import tornado.web
 
 
 
@@ -13,10 +16,10 @@ import sys
 from PIL import Image
 
 class faceDetectStream():
-    def __init__(self, args):
+    def readfile(self, args):
         self.getBaseEncodings()
-        filepath = str(args[1])
-        # filepath = 'D:\\demo\\img.txt'
+        # filepath = str(args[1])
+        filepath = 'D:\\demo\\img.txt'
         f = open(filepath, 'r')
         self.base64str = f.read()
         self.url = 0
@@ -28,6 +31,7 @@ class faceDetectStream():
         print("start readb64")
         imgdata = base64.b64decode(str(self.base64str))
         image = Image.open(io.BytesIO(imgdata))
+        print(str(self.base64str))
         print("end readb64")
         return cv2.cvtColor(np.array(image), cv2.COLOR_BGR2RGB)
 
@@ -44,19 +48,22 @@ class faceDetectStream():
             base_face_encoding = face_recognition.face_encodings(base_image)[0]
             self.base_encodings.__setitem__(name, base_face_encoding)
 
-    def faceRecog(self):
+    def faceRecog(self, argstr):
         # Initialize some variables
         face_locations = []
         face_encodings = []
+        if argstr:
+            self.base64str = argstr
         frame = self.readb64()
 
         # Resize frame of video to 1/4 size for faster face recognition processing
         # if  frame is not None:
         try:
-            small_frame = cv2.resize(frame, (0, 0), fx=1/self.v_size, fy=1/self.v_size)
+            # small_frame = cv2.resize(frame, (0, 0), fx=1/self.v_size, fy=1/self.v_size)
+            small_frame = frame
         except :
             print('error')
-            return "error"
+            return "unknow"
         face_locations = face_recognition.face_locations(small_frame)
         face_encodings = face_recognition.face_encodings(small_frame, face_locations)
 
@@ -71,18 +78,56 @@ class faceDetectStream():
                 if match[0]:
                     name = base_name
                     face_names.__setitem__(str(distance), name)
-            if name != "unknow":
+            if face_names:
                 for k in sorted(face_names.keys()):
-                    print(face_names[k])
+                    result =  face_names[k]
+                    print("found", face_names[k])
                     break
             else :
                 print('unknow')
-            return
+                result = 'unknow'
+            return result
+
+# if __name__ == "__main__":
+#     starttime = datetime.datetime.now()
+#     print(starttime)
+#     fd = faceDetectStream(sys.argv)
+#     fd.faceRecog()
+#     endtime = datetime.datetime.now()
+#     print(endtime - starttime)
+fd = faceDetectStream()
+class AjaxHandler(tornado.web.RequestHandler):
+    def get(self):
+        fd.readfile('D:\\demo\\img.txt')
+        userName = fd.faceRecog()
+        if userName:
+            self.write(userName)
+        else:
+            self.write("unknow")
+
+    def post(self):
+        argstr = self.get_argument("base64str")
+        userName = fd.faceRecog(argstr)
+        if userName:
+            self.write(userName)
+        else:
+            self.write("unknow")
+
+def main():
+        # a = abc()
+        # a.start()
+        fd.readfile('D:\\demo\\img.txt')
+        tornado.options.parse_command_line()
+        # settings = {
+        #     "static_path": os.path.join(os.path.dirname(__file__), "web/static")
+        # }  # 配置静态文件路径
+        application = tornado.web.Application([
+            (r"/ajax", AjaxHandler),
+        ])
+        http_server = tornado.httpserver.HTTPServer(application)
+        http_server.listen(82)
+        tornado.ioloop.IOLoop.instance().start()
+
 
 if __name__ == "__main__":
-    starttime = datetime.datetime.now()
-    print(starttime)
-    fd = faceDetectStream(sys.argv)
-    fd.faceRecog()
-    endtime = datetime.datetime.now()
-    print(endtime - starttime)
+    main()
