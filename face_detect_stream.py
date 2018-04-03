@@ -1,31 +1,37 @@
+import os
+import sys
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
+
 import base64
 import io
 import numpy as np
 import face_recognition
 import cv2
-import os
+
 import re
 import tornado.httpserver
 import tornado.ioloop
 import tornado.options
 import tornado.web
 
-
-
-import sys
 from PIL import Image
 
-class faceDetectStream():
-    def readfile(self, args):
-        self.getBaseEncodings()
-        # filepath = str(args[1])
-        filepath = 'D:\\demo\\img.txt'
-        f = open(filepath, 'r')
-        self.base64str = f.read()
-        self.url = 0
-        self.speed = 4
-        self.v_size = 1
 
+class faceDetectStream():
+    # def readfile(self, args):
+    #     self.getBaseEncodings()
+    #     # filepath = str(args[1])
+    #     filepath = 'D:\\demo\\img.txt'
+    #     f = open(filepath, 'r')
+    #     self.base64str = f.read()
+    #     self.url = 0
+    #     self.speed = 4
+    #     self.v_size = 1
+
+    def __init__(self):
+        self.getBaseEncodings()
 
     def readb64(self):
         print("start readb64")
@@ -36,7 +42,7 @@ class faceDetectStream():
         return cv2.cvtColor(np.array(image), cv2.COLOR_BGR2RGB)
 
     def getBaseEncodings(self):
-        path = "D:\workspace_python\HugU\HugU\input"
+        path = "./input"
         allfilelist = os.listdir(path)
         self.base_encodings = {}
         for file in allfilelist:
@@ -98,8 +104,9 @@ class faceDetectStream():
 fd = faceDetectStream()
 class AjaxHandler(tornado.web.RequestHandler):
     def get(self):
-        fd.readfile('D:\\demo\\img.txt')
-        userName = fd.faceRecog()
+        # fd.readfile('D:\\demo\\img.txt')
+        argstr = self.get_argument("base64str")
+        userName = fd.faceRecog(argstr)
         if userName:
             self.write(userName)
         else:
@@ -113,16 +120,21 @@ class AjaxHandler(tornado.web.RequestHandler):
         else:
             self.write("unknow")
 
+class hello(tornado.web.RequestHandler):
+    def get(self):
+        self.write("hello")
+
 def main():
         # a = abc()
         # a.start()
-        fd.readfile('D:\\demo\\img.txt')
+        # fd.readfile('D:\\demo\\img.txt')
         tornado.options.parse_command_line()
         # settings = {
         #     "static_path": os.path.join(os.path.dirname(__file__), "web/static")
         # }  # 配置静态文件路径
         application = tornado.web.Application([
             (r"/ajax", AjaxHandler),
+            (r"/hello", hello),
         ])
         http_server = tornado.httpserver.HTTPServer(application)
         http_server.listen(82)
